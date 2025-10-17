@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <?!= include('Stylesheet'); ?>
+</head>
+<body>
+    <h3 class="titulo-painel">
+        <?!= include('ComponenteBotaoVoltar'); ?>
+        Painel de Vencidos
+    </h3>
+
+    <div id="botoes-principais-vencido">
+      <button id="btn-abrir-form-vencido">Registar Novo Produto Vencido</button>
+      <button id="btn-solicitar-nfd">Solicitar NFD</button>
+      <button id="btn-gerar-etiqueta">Gerar Etiqueta</button>
+      <button id="btn-limpar-lista">Limpar Lista</button>
+    </div>
+    
+    <div id="status-vencido">
+        <div class="loader" id="loader-vencido" style="display: none;"></div>
+        <p id="mensagem-vencido"></p>
+    </div>
+
+    <div id="modal-registro-overlay" class="modal-overlay" style="display: none;">
+      <div id="form-vencido" class="painel painel-vencido">
+        <h4>Registar Novo Produto Vencido</h4>
+        <label>Código:</label>
+        <div class="input-com-icone"><span class="icone">#️⃣</span><input type="text" id="vencido-codigo" class="input-form" placeholder="Código interno"></div>
+        <label>Medicamento:</label>
+        <div class="input-com-icone"><span class="icone">💊</span><input type="text" id="vencido-medicamento" class="input-form" placeholder="Medicamento"></div>
+        <label>Laboratório:</label>
+        <div class="input-com-icone"><span class="icone">🏢</span><input type="text" id="vencido-laboratorio" class="input-form" placeholder="Laboratório"></div>
+        <label>Quantidade:</label>
+        <div class="input-com-icone"><span class="icone">🔢</span><input type="number" id="vencido-quantidade" class="input-form" placeholder="Quantidade"></div>
+        <label>Lote:</label>
+        <div class="input-com-icone"><span class="icone">🏷️</span><input type="text" id="vencido-lote" class="input-form" placeholder="Lote"></div>
+        <label>Código de Barra:</label>
+        <div class="input-com-icone"><span class="icone">║█║</span><input type="text" id="vencido-codigobarra" class="input-form" placeholder="Código de Barra"></div>
+        <label>MS (Registo Anvisa):</label>
+        <div class="input-com-icone"><span class="icone">⚕️</span><input type="text" id="vencido-ms" class="input-form" onblur="formatarMSInput(this)" placeholder="Registro Anvisa" maxlength="17"></div>
+        <label>NCM:</label>
+        <div class="input-com-icone"><span class="icone">🧾</span><input type="text" id="vencido-ncm" class="input-form" placeholder="NCM"></div>
+        <label>CEST:</label>
+        <div class="input-com-icone"><span class="icone">🧾</span><input type="text" id="vencido-cest" class="input-form" placeholder="CEST"></div>
+        <label>CFOP:</label>
+        <div class="input-com-icone"><span class="icone">🧾</span><input type="text" id="vencido-cfop" class="input-form" placeholder="CFOP"></div>
+        <label>Preço Unitário:</label>
+        <div class="input-com-icone"><span class="icone">💵</span><input type="text" id="vencido-precounitario" class="input-form" onblur="formatarMoedaInput(this)" placeholder="Preço Unitário"></div>
+        
+        <div class="input-group">
+            <button id="btn-confirmar-vencido">Confirmar</button>
+            <button id="btn-cancelar-vencido" class="btn-cancelar">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-confirmacao-overlay" class="modal-overlay" style="display: none;">
+      <div id="modal-confirmacao" class="painel painel-coleta">
+        <h4 id="modal-titulo">Confirmação Necessária</h4>
+        <p id="modal-mensagem">Tem certeza que deseja apagar TODOS os itens da lista de vencidos?<br><br><strong>Esta ação não pode ser desfeita.</strong></p>
+        <div class="input-group">
+          <button id="modal-btn-confirmar">Confirmar</button>
+          <button id="modal-btn-cancelar" class="btn-cancelar">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <?!= include('JavaScript_Utils'); ?>
+    <?!= include('PainelVencidoJavaScript'); ?> 
+</body>
+</html>

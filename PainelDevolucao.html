@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <?!= include('Stylesheet'); ?>
+</head>
+<body>
+    <h3 class="titulo-painel">
+        <?!= include('ComponenteBotaoVoltar'); ?>
+        Painel de Devolução
+    </h3>
+
+    <div id="botoes-principais">
+        <button id="btn-registrar-devolucao">Registrar Devolução</button>
+        <button id="btn-adicionar-dados-fiscais">Adicionar Dados Fiscais</button>
+        <button id="btn-registrar-coleta">Registrar Coleta</button>
+        <button id="btn-credito-recebido">Crédito Recebido</button>
+    </div>
+
+    <div id="status">
+        <div class="loader" id="loader-devolucao" style="display: none;"></div>
+        <p id="mensagem-devolucao"></p>
+    </div>
+
+    <div id="modal-registro" class="modal-overlay" style="display: none;">
+        <div class="painel painel-registro">
+            <h4>Registrar Nova Devolução</h4>
+            <label>Distribuidora:</label>
+            <div class="input-com-icone"><span class="icone">🚚</span><select id="distribuidora" class="input-form"></select></div>
+            <label>Produto:</label>
+            <div class="input-com-icone"><span class="icone">📦</span><input type="text" id="produto" class="input-form" placeholder="Nome do produto"></div>
+            <label>Motivo:</label>
+            <div class="input-com-icone"><span class="icone">📝</span><select id="motivo" class="input-form"></select></div>
+            <label>Protocolo:</label>
+            <div class="input-com-icone"><span class="icone">🆔</span><input type="text" id="protocolo" class="input-form" placeholder="Código do protocolo"></div>
+            <label>Nota Fiscal:</label>
+            <div class="input-com-icone"><span class="icone">📄</span><input type="text" id="notaFiscal" class="input-form" placeholder="Número da NF"></div>
+            <div class="status-modal"><div class="loader"></div><p class="status-mensagem"></p></div>
+            <div class="input-group"><button id="btn-confirmar-registro">Confirmar</button><button class="btn-cancelar">Cancelar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-dados-fiscais" class="modal-overlay" style="display: none;">
+        <div class="painel painel-fiscal">
+            <h4>Adicionar Nota Fiscal e Valor</h4>
+            <label>Selecione a Devolução:</label>
+            <div class="input-com-icone"><span class="icone">🔍</span><select id="select-devolucao-fiscal" class="input-form"><option value="">Carregando...</option></select></div>
+            <label>Nota Fiscal de Devolução:</label>
+            <div class="input-com-icone"><span class="icone">🧾</span><input type="text" id="notaFiscalDev" class="input-form"placeholder="Número da NFD"></div>
+            <label>Valor:</label>
+            <div class="input-com-icone"><span class="icone">💰</span><input type="text" id="valor" class="input-form" onblur="formatarMoedaInput(this)"placeholder="Valor Unítario"></div>
+            <div class="status-modal"><div class="loader"></div><p class="status-mensagem"></p></div>
+            <div class="input-group"><button id="btn-confirmar-dados-fiscais">Confirmar</button><button class="btn-cancelar">Cancelar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-coleta" class="modal-overlay" style="display: none;">
+        <div class="painel painel-coleta">
+            <h4>Registrar Data da Coleta</h4>
+            <label>Selecione a Devolução Coletada:</label>
+            <div class="input-com-icone"><span class="icone">🔍</span><select id="select-devolucao-coleta" class="input-form"><option value="">Carregando...</option></select></div>
+            <div class="status-modal"><div class="loader"></div><p class="status-mensagem"></p></div>
+            <div class="input-group"><button id="btn-confirmar-coleta">Confirmar Coleta</button><button class="btn-cancelar">Cancelar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-credito" class="modal-overlay" style="display: none;">
+        <div class="painel painel-credito">
+            <h4>Confirmar Crédito Recebido</h4>
+            <label>Selecione a Devolução:</label>
+            <div class="input-com-icone"><span class="icone">🔍</span><select id="select-devolucao-credito" class="input-form"><option value="">Carregando...</option></select></div>
+            <div class="status-modal"><div class="loader"></div><p class="status-mensagem"></p></div>
+            <div class="input-group"><button id="btn-confirmar-credito">Confirmar Crédito</button><button class="btn-cancelar">Cancelar</button></div>
+        </div>
+    </div>
+
+    <?!= include('JavaScript_Utils'); ?>
+    <?!= include('PainelDevolucaoJavaScript'); ?>
+</body>
+</html>

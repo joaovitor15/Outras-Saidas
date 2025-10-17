@@ -1,0 +1,163 @@
+<script>
+    const painelTitulo = document.querySelector('.titulo-painel');
+    const modalRegistro = document.getElementById('modal-registro');
+    const modalDadosFiscais = document.getElementById('modal-dados-fiscais');
+    const modalColeta = document.getElementById('modal-coleta');
+    const modalCredito = document.getElementById('modal-credito');
+    let painelInicializado = false;
+
+    // --- 1. INICIALIZAÇÃO DO PAINEL ---
+    document.addEventListener("DOMContentLoaded", function() {
+      setLoadingStatus(true, "Carregando dados...", "info");
+      google.script.run.withSuccessHandler(onDadosIniciaisSuccess).withFailureHandler(onError).getDadosIniciaisPainelDevolucao();
+    });
+
+    function onDadosIniciaisSuccess(dados) {
+      try {
+        popularListas(dados.listas);
+        popularDevolucoesPendentes(dados.pendentes);
+        popularDevolucoesAguardandoColeta(dados.coleta);
+        popularDevolucoesAguardandoCredito(dados.credito);
+        
+        if (!painelInicializado) {
+          ativarBotoes();
+          painelInicializado = true;
+        }
+      } catch (e) {
+        console.error("Ocorreu um erro ao popular os dados do painel:", e);
+      } finally {
+        setLoadingStatus(false);
+      }
+    }
+
+    function atualizarListasEmSegundoPlano() {
+      google.script.run.withSuccessHandler(onDadosIniciaisSuccess).withFailureHandler(onError).getDadosIniciaisPainelDevolucao();
+    }
+    
+    // --- 2. FUNÇÕES DE APOIO ---
+    function limparFormularioRegistro() {
+        document.getElementById('distribuidora').value = '';
+        document.getElementById('produto').value = '';
+        document.getElementById('motivo').value = '';
+        document.getElementById('protocolo').value = '';
+        document.getElementById('notaFiscal').value = '';
+    }
+    
+    function limparFormularioDadosFiscais() {
+        document.getElementById('select-devolucao-fiscal').value = '';
+        document.getElementById('notaFiscalDev').value = '';
+        document.getElementById('valor').value = '';
+    }
+
+    function limparFormularioColeta() {
+        document.getElementById('select-devolucao-coleta').value = '';
+    }
+
+    function limparFormularioCredito() {
+        document.getElementById('select-devolucao-credito').value = '';
+    }
+
+    function popularListas(listas) {
+        const selectDist = document.getElementById('distribuidora');
+        const selectMotivo = document.getElementById('motivo');
+        if (selectDist) {
+            selectDist.innerHTML = '<option value="">Selecione uma distribuidora</option>';
+            if (listas && listas.distribuidores) {
+                listas.distribuidores.forEach(d => selectDist.innerHTML += `<option value="${d}">${d}</option>`);
+            }
+        }
+        if (selectMotivo) {
+            selectMotivo.innerHTML = '<option value="">Selecione um motivo</option>';
+            if (listas && listas.motivos) {
+                listas.motivos.forEach(m => selectMotivo.innerHTML += `<option value="${m}">${m}</option>`);
+            }
+        }
+    }
+    
+    function popularDevolucoesPendentes(devolucoes){ popularSelect('select-devolucao-fiscal', devolucoes); }
+    function popularDevolucoesAguardandoColeta(devolucoes){ popularSelect('select-devolucao-coleta', devolucoes); }
+    function popularDevolucoesAguardandoCredito(devolucoes){ popularSelect('select-devolucao-credito', devolucoes); }
+
+    function popularSelect(selectId, devolucoes) {
+        const s = document.getElementById(selectId);
+        if (s) {
+            s.innerHTML = '<option value="">Selecione uma devolução</option>';
+            if (devolucoes) {
+                devolucoes.forEach(d => s.innerHTML += `<option value="${d.linha}">${d.texto}</option>`);
+            }
+        }
+    }
+
+    function showModal(modalElement) { painelTitulo.style.display = 'none'; modalElement.style.display = 'flex'; }
+    
+    function hideAllModals() {
+        const modals = [modalRegistro, modalDadosFiscais, modalColeta, modalCredito];
+        modals.forEach(modal => {
+            modal.style.display = 'none';
+            const statusContainer = modal.querySelector('.status-modal');
+            if (statusContainer) {
+                const loader = statusContainer.querySelector('.loader');
+                const mensagemEl = statusContainer.querySelector('p');
+                if (loader) loader.style.display = 'none';
+                if (mensagemEl) {
+                    mensagemEl.innerText = '';
+                    mensagemEl.className = '';
+                }
+            }
+        });
+        painelTitulo.style.display = 'flex';
+    }
+    
+    function setLoadingStatus(isLoading, msg = "", tipo = "info", context = null) {
+        const container = context ? context.querySelector('.status-modal') : document.getElementById('status');
+        if (container) {
+            const loader = container.querySelector('.loader');
+            const mensagemEl = container.querySelector('p');
+            if (loader) loader.style.display = isLoading ? 'block' : 'none';
+            if (mensagemEl) { 
+                mensagemEl.innerText = msg;
+                mensagemEl.className = msg ? 'status-' + tipo : '';
+            }
+        }
+        document.querySelectorAll('button, input, select').forEach(el => el.disabled = isLoading);
+    }
+
+    function onError(error) {
+        console.error("Erro retornado pelo servidor:", error);
+        setLoadingStatus(false, "Falha ao carregar. Tente novamente.", "erro");
+    }
+
+    // --- 3. LÓGICA DE AÇÕES ---
+    function onSucesso(mensagem, modalContext){ 
+      setLoadingStatus(true, mensagem, "sucesso", modalContext);
+      
+      if (modalContext.id === 'modal-registro') {
+          limparFormularioRegistro();
+      } else if (modalContext.id === 'modal-dados-fiscais') {
+          limparFormularioDadosFiscais();
+      } else if (modalContext.id === 'modal-coleta') {
+          limparFormularioColeta();
+      } else if (modalContext.id === 'modal-credito') {
+          limparFormularioCredito();
+      }
+      
+      setTimeout(() => { 
+        hideAllModals(); 
+        setLoadingStatus(false);
+        atualizarListasEmSegundoPlano();
+      }, 2000); 
+    }
+    
+    function ativarBotoes() {
+        document.getElementById("btn-registrar-devolucao").addEventListener("click", () => showModal(modalRegistro));
+        document.getElementById("btn-adicionar-dados-fiscais").addEventListener("click", () => showModal(modalDadosFiscais));
+        document.getElementById("btn-registrar-coleta").addEventListener("click", () => showModal(modalColeta));
+        document.getElementById("btn-credito-recebido").addEventListener("click", () => showModal(modalCredito));
+        document.getElementById("btnVoltar").addEventListener("click", () => { setLoadingStatus(true, "Voltando ao menu...", "info"); google.script.run.mostrarMenuPrincipal(); });
+        document.querySelectorAll(".btn-cancelar").forEach(b => b.addEventListener("click", hideAllModals));
+        document.getElementById("btn-confirmar-registro").addEventListener("click",function(){ const d={distribuidora:document.getElementById('distribuidora').value,produto:document.getElementById('produto').value,motivo:document.getElementById('motivo').value,protocolo:document.getElementById('protocolo').value,notaFiscal:document.getElementById('notaFiscal').value}; if(!d.distribuidora||!d.produto||!d.motivo){alert('Preencha os campos obrigatórios.');return} setLoadingStatus(true, "Registrando...","info", modalRegistro); google.script.run.withSuccessHandler((msg) => onSucesso(msg, modalRegistro)).withFailureHandler(onError).registrarNovaDevolucao(d); });
+        document.getElementById("btn-confirmar-dados-fiscais").addEventListener("click",function(){ const d={linha:document.getElementById('select-devolucao-fiscal').value,notaFiscalDev:document.getElementById('notaFiscalDev').value,valor:document.getElementById('valor').value}; if(!d.linha||!d.notaFiscalDev||!d.valor){alert('Preencha todos os campos.');return} setLoadingStatus(true, "Atualizando...","info", modalDadosFiscais); google.script.run.withSuccessHandler((msg) => onSucesso(msg, modalDadosFiscais)).withFailureHandler(onError).adicionarDadosFiscais(d); });
+        document.getElementById("btn-confirmar-coleta").addEventListener("click",function(){ const l=document.getElementById('select-devolucao-coleta').value; if(!l){alert('Selecione uma devolução.');return} setLoadingStatus(true, "Registrando...","info", modalColeta); google.script.run.withSuccessHandler((msg) => onSucesso(msg, modalColeta)).withFailureHandler(onError).registrarColeta(l); });
+        document.getElementById("btn-confirmar-credito").addEventListener("click",function(){ const l=document.getElementById('select-devolucao-credito').value; if(!l){alert('Selecione uma devolução.');return} setLoadingStatus(true, "Registrando...","info", modalCredito); google.script.run.withSuccessHandler((msg) => onSucesso(msg, modalCredito)).withFailureHandler(onError).registrarCreditoRecebido(l); });
+    }
+</script>

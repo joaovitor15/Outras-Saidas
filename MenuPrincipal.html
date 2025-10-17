@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include('Stylesheet'); ?>
+  </head>
+  <body>
+    <h3>Menu Principal</h3>
+    <p>Selecione o que deseja fazer agora:</p>
+
+    <button id="btn-devolucao">Devolução</button>
+    <button id="btn-vencido">Vencido</button>
+    
+    <div id="status" style="margin-top:20px;"><div class="loader" id="loader"></div><p id="mensagem"></p></div>
+
+    <script>
+      let MENSAGENS_CLIENTE;
+      google.script.run.withSuccessHandler(dados => {
+        try {
+          MENSAGENS_CLIENTE = JSON.parse(dados).mensagens;
+        } catch (e) {
+          console.error("Falha ao analisar dados do cliente:", e);
+        }
+      }).getDadosParaCliente();
+    </script>
+    
+    <?!= include('JavaScript_Utils'); ?>
+
+   <script>
+    // ESTA FUNÇÃO FOI REMOVIDA, POIS NÃO FUNCIONA QUANDO A SIDEBAR É TROCADA
+    // function onSidebarShowSuccess() { ... }
+
+    // Adiciona o evento de clique ao botão Devolução
+    document.getElementById("btn-devolucao").addEventListener("click", function() {
+      if (MENSAGENS_CLIENTE && MENSAGENS_CLIENTE.UI) {
+        setLoading(true, MENSAGENS_CLIENTE.UI.ABRINDO_PAINEL, 'info');
+      }
+      // O HANDLER .withSuccessHandler(onSidebarShowSuccess) FOI REMOVIDO DAQUI
+      google.script.run.withFailureHandler(onError).mostrarPainelDevolucao();
+    });
+
+    // Adiciona o evento de clique ao botão Vencido
+    document.getElementById("btn-vencido").addEventListener("click", function() {
+      if (MENSAGENS_CLIENTE && MENSAGENS_CLIENTE.UI) {
+        setLoading(true, MENSAGENS_CLIENTE.UI.ABRINDO_PAINEL, 'info');
+      }
+      // O HANDLER .withSuccessHandler(onSidebarShowSuccess) FOI REMOVIDO DAQUI
+      google.script.run.withFailureHandler(onError).mostrarPainelVencido();
+    });
+   </script>
+  </body>
+</html>

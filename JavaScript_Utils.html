@@ -1,0 +1,73 @@
+<script>
+  /**
+   * Controla a exibição do loader e das mensagens de status, desabilitando/habilitando botões.
+   * @param {boolean} isLoading - True para mostrar, false para esconder.
+   * @param {string} msg - A mensagem a ser exibida.
+   * @param {string} tipo - O tipo de mensagem (info, sucesso, erro).
+   */
+  function setLoading(isLoading, msg = "", tipo = "info") {
+    const msgEl = document.getElementById("mensagem");
+    const loaderEl = document.getElementById("loader");
+
+    if (loaderEl) loaderEl.style.display = isLoading ? 'block' : 'none';
+    if (msgEl) {
+        msgEl.innerText = msg;
+        msgEl.className = msg ? 'status-' + tipo : '';
+    }
+    
+    // Desabilita todos os botões quando está carregando e os habilita quando termina
+    document.querySelectorAll('button').forEach(el => el.disabled = isLoading);
+  }
+
+  /**
+   * Função padrão para tratar erros vindos do servidor.
+   * @param {Error} error - O objeto de erro retornado pelo Google Apps Script.
+   */
+  function onError(error) {
+    console.error("Erro retornado pelo servidor:", error);
+    // Usa a função setLoading para mostrar o erro de forma consistente
+    setLoading(false, `Erro: ${error.message}`, 'erro');
+  }
+
+  /**
+   * Formata o valor de um campo de input para o formato de moeda (0,00)
+   * quando o utilizador sai do campo.
+   * @param {HTMLElement} el O próprio elemento input.
+   */
+  function formatarMoedaInput(el) {
+    if (!el.value) return; // Se o campo estiver vazio, não faz nada
+
+    // Substitui a vírgula por ponto para o cálculo
+    let v = el.value.replace(',', '.');
+    let n = parseFloat(v);
+
+    // Se o valor não for um número, limpa o campo
+    if (isNaN(n)) {
+      el.value = '';
+      return;
+    }
+
+    // Formata para 2 casas decimais e substitui o ponto por vírgula para exibição
+    el.value = n.toFixed(2).replace('.', ',');
+  }
+
+  /**
+   * Formata o valor de um campo para o padrão de MS (X.XXXX.XXXX.XXX-X).
+   * @param {HTMLElement} el O próprio elemento input.
+   */
+  function formatarMSInput(el) {
+    if (!el.value) return; // Se não houver valor, não faz nada
+
+    // 1. Remove tudo que não for número e limita a 13 dígitos
+    let v = el.value.replace(/\D/g, '').slice(0, 13);
+
+    // 2. Aplica a máscara com os pontos e o hífen
+    if (v.length > 1) v = v.replace(/^(\d{1})(\d)/, '$1.$2');
+    if (v.length > 6) v = v.replace(/^(\d{1})\.(\d{4})(\d)/, '$1.$2.$3');
+    if (v.length > 11) v = v.replace(/^(\d{1})\.(\d{4})\.(\d{4})(\d)/, '$1.$2.$3.$4');
+    if (v.length > 15) v = v.replace(/^(\d{1})\.(\d{4})\.(\d{4})\.(\d{3})(\d)/, '$1.$2.$3.$4-$5');
+    
+    // 3. Atualiza o valor no campo
+    el.value = v;
+  }
+</script>

@@ -1,0 +1,150 @@
+<script>
+  // --- Referências aos elementos da UI ---
+  const painelBotoes = document.getElementById('botoes-principais-vencido');
+  const modalConfirmacaoOverlay = document.getElementById('modal-confirmacao-overlay');
+  const modalRegistroOverlay = document.getElementById('modal-registro-overlay');
+  const painelTitulo = document.querySelector('.titulo-painel');
+  
+  let MENSAGS_UI;
+
+  // --- Inicialização do Painel ---
+  document.addEventListener('DOMContentLoaded', function() {
+    setLoadingVencido(true, "Carregando configurações...", "info");
+    google.script.run
+      .withSuccessHandler(onDadosCarregados)
+      .withFailureHandler(onFalhaCritica)
+      .getDadosParaCliente();
+  });
+
+  function onDadosCarregados(dadosString) {
+    try {
+      const DADOS_PARA_CLIENTE = JSON.parse(dadosString);
+      MENSAGS_UI = DADOS_PARA_CLIENTE.mensagens.UI;
+      ativarBotoesVencido();
+      setLoadingVencido(false);
+    } catch (e) {
+      onFalhaCritica(e);
+    }
+  }
+  
+  function onFalhaCritica(erro) {
+    console.error("Falha ao carregar dados do servidor (Vencido):", erro);
+    setLoadingVencido(false, "Erro crítico ao carregar o painel.", "erro");
+  }
+
+  // --- Funções de Controle da UI ---
+  function limparFormularioVencido() {
+    document.getElementById('form-vencido').querySelectorAll('input').forEach(input => input.value = '');
+  }
+
+  function setLoadingVencido(isLoading, mensagem = "", tipo = "info") {
+      const loader = document.getElementById('loader-vencido');
+      const pMensagem = document.getElementById('mensagem-vencido');
+      
+      if (loader) loader.style.display = isLoading ? 'block' : 'none';
+      
+      if (pMensagem) {
+        pMensagem.innerText = mensagem;
+        pMensagem.className = mensagem ? 'status-' + tipo : '';
+      }
+      
+      document.querySelectorAll('button, input').forEach(el => el.disabled = isLoading);
+  }
+
+  // --- Lógica de Submissão e Geração ---
+  function submeterFormularioVencido() {
+    const dados = {
+      codigo: document.getElementById('vencido-codigo').value, medicamento: document.getElementById('vencido-medicamento').value,
+      laboratorio: document.getElementById('vencido-laboratorio').value, quantidade: document.getElementById('vencido-quantidade').value,
+      lote: document.getElementById('vencido-lote').value, codigoDeBarra: document.getElementById('vencido-codigobarra').value,
+      ms: document.getElementById('vencido-ms').value, ncm: document.getElementById('vencido-ncm').value,
+      cest: document.getElementById('vencido-cest').value, cfop: document.getElementById('vencido-cfop').value,
+      precoUnitario: document.getElementById('vencido-precounitario').value
+    };
+    setLoadingVencido(true, MENSAGS_UI.REGISTRANDO, "info");
+    google.script.run.withSuccessHandler(onRegistroSucessoVencido).withFailureHandler(onFalhaVencido).registrarVencido(dados);
+  }
+
+  function onRegistroSucessoVencido(mensagem) {
+    setLoadingVencido(true, mensagem, "sucesso");
+    setTimeout(() => {
+      hideModalRegistro();
+      setLoadingVencido(false);
+    }, 2000);
+  }
+
+  function gerarDocumentoDireto() {
+    setLoadingVencido(true, MENSAGS_UI.GERANDO_PDF, "info");
+    google.script.run.withSuccessHandler(onGeracaoSucessoVencido).withFailureHandler(onFalhaVencido).gerarNotaDevolucao();
+  }
+  
+  function gerarEtiqueta() {
+    setLoadingVencido(true, "Gerando etiqueta, por favor aguarde...", "info");
+    google.script.run.withSuccessHandler(onGeracaoSucessoVencido).withFailureHandler(onFalhaVencido).gerarEtiquetaDescarte();
+  }
+
+  function onGeracaoSucessoVencido(resultado) {
+    setLoadingVencido(true, resultado.message, "sucesso");
+    if (resultado.pdfUrl) window.open(resultado.pdfUrl, '_blank');
+    setTimeout(() => setLoadingVencido(false), 2000);
+  }
+
+  function onFalhaVencido(erro) {
+    setLoadingVencido(false, erro.message, "erro");
+  }
+
+  // --- Funções de Controle dos Modais ---
+  function showModalConfirmacao() {
+    painelTitulo.style.display = 'none';
+    modalConfirmacaoOverlay.style.display = 'flex';
+  }
+  function hideModalConfirmacao() {
+    modalConfirmacaoOverlay.style.display = 'none';
+    painelTitulo.style.display = 'flex';
+  }
+  function showModalRegistro() {
+    painelTitulo.style.display = 'none';
+    modalRegistroOverlay.style.display = 'flex';
+  }
+  function hideModalRegistro() { 
+    modalRegistroOverlay.style.display = 'none';
+    painelTitulo.style.display = 'flex';
+    limparFormularioVencido();
+  }
+
+  function executarLimpeza() {
+    hideModalConfirmacao();
+    setLoadingVencido(true, "Limpando a lista, por favor aguarde...", "info");
+    google.script.run
+      .withSuccessHandler(onLimpezaSucesso)
+      .withFailureHandler(onFalhaVencido)
+      .limparPlanilhaVencidos();
+  }
+
+  function onLimpezaSucesso(mensagem) {
+    setLoadingVencido(true, mensagem, "sucesso");
+    setTimeout(() => setLoadingVencido(false), 2500);
+  }
+
+  // --- Ativação de Todos os Botões ---
+  function ativarBotoesVencido() {
+    // Botões Principais
+    document.getElementById('btn-abrir-form-vencido').addEventListener('click', showModalRegistro);
+    document.getElementById('btn-solicitar-nfd').addEventListener('click', gerarDocumentoDireto);
+    // --- LINHA CORRIGIDA ABAIXO ---
+    document.getElementById('btn-gerar-etiqueta').addEventListener('click', gerarEtiqueta);
+    document.getElementById("btn-limpar-lista").addEventListener('click', showModalConfirmacao);
+    document.getElementById("btnVoltar").addEventListener('click', () => {
+      setLoadingVencido(true, "Voltando ao menu...", "info");
+      google.script.run.mostrarMenuPrincipal();
+    });
+
+    // Botões do Modal de Registro
+    document.getElementById('btn-confirmar-vencido').addEventListener('click', submeterFormularioVencido);
+    document.getElementById('btn-cancelar-vencido').addEventListener('click', hideModalRegistro);
+
+    // Botões do Modal de Confirmação
+    document.getElementById('modal-btn-confirmar').addEventListener('click', executarLimpeza);
+    document.getElementById('modal-btn-cancelar').addEventListener('click', hideModalConfirmacao);
+  }
+</script>
